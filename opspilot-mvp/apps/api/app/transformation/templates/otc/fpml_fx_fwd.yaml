@@ -1,0 +1,219 @@
+# FpML FX Forward transformation template
+# Defines field mappings and validation rules for FX Forward trades
+
+product_type: "FX_FWD"
+description: "FX Forward (Currency Exchange)"
+
+# Field mappings from FpML to canonical format
+field_mappings:
+  trade_id:
+    fpml_path: "//fpml:tradeHeader/fpml:partyTradeIdentifier/fpml:tradeId"
+    required: true
+    validation:
+      type: "string"
+      max_length: 50
+
+  trade_date:
+    fpml_path: "//fpml:tradeHeader/fpml:tradeDate"
+    required: true
+    validation:
+      type: "date"
+      format: "YYYY-MM-DD"
+
+  counterparty:
+    fpml_path: "//fpml:tradeHeader/fpml:partyTradeIdentifier/fpml:partyReference/@href"
+    required: true
+    validation:
+      type: "string"
+      max_length: 20
+
+  uti:
+    fpml_path: "//fpml:usi/fpml:utiIdentifier"
+    required: false
+    validation:
+      type: "string"
+      max_length: 52
+
+  value_date:
+    fpml_path: "//fpml:fxSingleLeg/fpml:valueDate"
+    required: true
+    validation:
+      type: "date"
+
+  currency1:
+    fpml_path: "//fpml:fxSingleLeg/fpml:exchangedCurrency1/fpml:paymentAmount/fpml:currency"
+    required: true
+    validation:
+      type: "string"
+      pattern: "^[A-Z]{3}$"
+
+  notional1:
+    fpml_path: "//fpml:fxSingleLeg/fpml:exchangedCurrency1/fpml:paymentAmount/fpml:amount"
+    required: true
+    validation:
+      type: "decimal"
+      min: 0
+      max: 999999999999
+
+  currency2:
+    fpml_path: "//fpml:fxSingleLeg/fpml:exchangedCurrency2/fpml:paymentAmount/fpml:currency"
+    required: true
+    validation:
+      type: "string"
+      pattern: "^[A-Z]{3}$"
+
+  notional2:
+    fpml_path: "//fpml:fxSingleLeg/fpml:exchangedCurrency2/fpml:paymentAmount/fpml:amount"
+    required: true
+    validation:
+      type: "decimal"
+      min: 0
+      max: 999999999999
+
+  forward_rate:
+    fpml_path: "//fpml:fxSingleLeg/fpml:exchangeRate/fpml:rate"
+    required: false
+    description: "Forward rate (currency2/currency1), calculated if not provided"
+    validation:
+      type: "decimal"
+      min: 0.0001
+      max: 10000
+
+# Reconciliation tolerances
+tolerances:
+  forward_rate:
+    type: "basis_points"
+    value: 0.5
+    description: "Forward rate tolerance in basis points"
+
+  notional1:
+    type: "absolute"
+    value: 1.0
+    description: "Primary notional tolerance"
+
+  notional2:
+    type: "absolute"
+    value: 1.0
+    description: "Secondary notional tolerance"
+
+  dates:
+    type: "days"
+    value: 0
+    description: "Date tolerance in days (exact match required)"
+
+# Business rules and validations
+business_rules:
+  - name: "value_date_after_trade"
+    description: "Value date must be after trade date"
+    validation: "value_date > trade_date"
+
+  - name: "different_currencies"
+    description: "Currency1 and Currency2 must be different"
+    validation: "currency1 != currency2"
+
+  - name: "reasonable_forward_rate"
+    description: "Forward rate should be positive and reasonable"
+    validation: "forward_rate > 0 AND forward_rate < 10000"
+
+  - name: "reasonable_tenor"
+    description: "FX forward tenor should be between 1 day and 5 years"
+    validation: "1 <= days_between(trade_date, value_date) <= 1825"
+
+  - name: "consistent_amounts"
+    description: "Notional amounts should be consistent with forward rate"
+    validation: "abs(notional2 - (notional1 * forward_rate)) / notional2 < 0.01"
+
+# Match key configuration
+match_key:
+  fields:
+    - "counterparty"
+    - "trade_date"
+    - "value_date"
+    - "currency_pair"  # Normalized as "CCY1/CCY2"
+    - "notional1"
+    - "forward_rate"
+  description: "Composite key for matching FX Forward trades"
+
+# Normalization rules
+normalization:
+  currency1:
+    type: "uppercase"
+    description: "Convert currency codes to uppercase"
+
+  currency2:
+    type: "uppercase"
+    description: "Convert currency codes to uppercase"
+
+  currency_pair:
+    type: "custom"
+    function: "normalize_currency_pair"
+    description: "Create normalized currency pair (alphabetical order)"
+
+  forward_rate:
+    type: "calculated"
+    formula: "notional2 / notional1"
+    condition: "forward_rate is null"
+    description: "Calculate forward rate if not provided"
+
+# Currency pair normalization
+currency_pair_rules:
+  # Major currency pairs (base currency first)
+  major_pairs:
+    - "EUR/USD"
+    - "GBP/USD" 
+    - "USD/JPY"
+    - "USD/CHF"
+    - "USD/CAD"
+    - "AUD/USD"
+    - "NZD/USD"
+  
+  # For non-major pairs, use alphabetical order
+  default_rule: "alphabetical"
+
+# Supported currencies
+supported_currencies:
+  - "USD"
+  - "EUR"
+  - "GBP"
+  - "JPY"
+  - "CHF"
+  - "CAD"
+  - "AUD"
+  - "NZD"
+  - "SEK"
+  - "NOK"
+  - "DKK"
+
+# Error handling
+error_handling:
+  missing_required_field:
+    action: "reject"
+    message: "Required field {field_name} is missing at {xpath}"
+
+  invalid_field_value:
+    action: "reject"
+    message: "Invalid value '{value}' for field {field_name}: {validation_error}"
+
+  unsupported_currency:
+    action: "warn"
+    message: "Unsupported currency '{currency}' - proceeding with caution"
+
+  business_rule_violation:
+    action: "warn"
+    message: "Business rule violation: {rule_description}"
+
+  rate_calculation_error:
+    action: "reject"
+    message: "Cannot calculate forward rate: {error_details}"
+
+# Output format
+output:
+  format: "canonical_trade"
+  include_metadata: true
+  include_source_reference: true
+  
+  # Additional FX-specific output fields
+  additional_fields:
+    - "currency_pair_normalized"
+    - "rate_calculation_method"
+    - "settlement_instructions"

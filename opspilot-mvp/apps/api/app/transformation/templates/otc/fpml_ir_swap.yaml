@@ -1,0 +1,190 @@
+# FpML Interest Rate Swap transformation template
+# Defines field mappings and validation rules for IRS trades
+
+product_type: "IRS"
+description: "Interest Rate Swap (Fixed vs Floating)"
+
+# Field mappings from FpML to canonical format
+field_mappings:
+  trade_id:
+    fpml_path: "//fpml:tradeHeader/fpml:partyTradeIdentifier/fpml:tradeId"
+    required: true
+    validation:
+      type: "string"
+      max_length: 50
+
+  trade_date:
+    fpml_path: "//fpml:tradeHeader/fpml:tradeDate"
+    required: true
+    validation:
+      type: "date"
+      format: "YYYY-MM-DD"
+
+  counterparty:
+    fpml_path: "//fpml:tradeHeader/fpml:partyTradeIdentifier/fpml:partyReference/@href"
+    required: true
+    validation:
+      type: "string"
+      max_length: 20
+
+  uti:
+    fpml_path: "//fpml:usi/fpml:utiIdentifier"
+    required: false
+    validation:
+      type: "string"
+      max_length: 52
+
+  effective_date:
+    fpml_path: "//fpml:swap/fpml:swapStream/fpml:calculationPeriodDates/fpml:effectiveDate/fpml:unadjustedDate"
+    required: true
+    validation:
+      type: "date"
+
+  maturity_date:
+    fpml_path: "//fpml:swap/fpml:swapStream/fpml:calculationPeriodDates/fpml:terminationDate/fpml:unadjustedDate"
+    required: true
+    validation:
+      type: "date"
+
+  notional:
+    fpml_path: "//fpml:swap/fpml:swapStream[fpml:calculationPeriodAmount/fpml:calculation/fpml:fixedRateSchedule]/fpml:calculationPeriodAmount/fpml:calculation/fpml:notionalSchedule/fpml:notionalStepSchedule/fpml:initialValue"
+    required: true
+    validation:
+      type: "decimal"
+      min: 0
+      max: 999999999999
+
+  currency:
+    fpml_path: "//fpml:swap/fpml:swapStream[fpml:calculationPeriodAmount/fpml:calculation/fpml:fixedRateSchedule]/fpml:calculationPeriodAmount/fpml:calculation/fpml:notionalSchedule/fpml:notionalStepSchedule/fpml:currency"
+    required: true
+    validation:
+      type: "string"
+      pattern: "^[A-Z]{3}$"
+
+  fixed_rate:
+    fpml_path: "//fpml:swap/fpml:swapStream/fpml:calculationPeriodAmount/fpml:calculation/fpml:fixedRateSchedule/fpml:initialValue"
+    required: true
+    validation:
+      type: "decimal"
+      min: -0.1
+      max: 1.0
+
+  floating_index:
+    fpml_path: "//fpml:swap/fpml:swapStream/fpml:calculationPeriodAmount/fpml:calculation/fpml:floatingRateCalculation/fpml:floatingRateIndex"
+    required: true
+    validation:
+      type: "string"
+      enum: ["USD-LIBOR-BBA", "EUR-EURIBOR-Reuters", "GBP-LIBOR-BBA", "USD-SOFR-COMPOUND", "EUR-ESTR-COMPOUND"]
+
+  floating_spread:
+    fpml_path: "//fpml:swap/fpml:swapStream/fpml:calculationPeriodAmount/fpml:calculation/fpml:floatingRateCalculation/fpml:spread"
+    required: false
+    default: 0.0
+    validation:
+      type: "decimal"
+      min: -0.1
+      max: 0.1
+
+  day_count:
+    fpml_path: "//fpml:swap/fpml:swapStream[fpml:calculationPeriodAmount/fpml:calculation/fpml:fixedRateSchedule]/fpml:calculationPeriodAmount/fpml:calculation/fpml:dayCountFraction"
+    required: true
+    validation:
+      type: "string"
+      enum: ["ACT/360", "ACT/365", "30/360", "ACT/ACT"]
+
+# Reconciliation tolerances
+tolerances:
+  fixed_rate:
+    type: "basis_points"
+    value: 0.5
+    description: "Fixed rate tolerance in basis points"
+
+  floating_spread:
+    type: "basis_points"
+    value: 0.5
+    description: "Floating spread tolerance in basis points"
+
+  notional:
+    type: "absolute"
+    value: 1.0
+    description: "Notional amount tolerance"
+
+  dates:
+    type: "days"
+    value: 0
+    description: "Date tolerance in days (exact match required)"
+
+# Business rules and validations
+business_rules:
+  - name: "maturity_after_effective"
+    description: "Maturity date must be after effective date"
+    validation: "maturity_date > effective_date"
+
+  - name: "trade_date_before_effective"
+    description: "Trade date must be before or equal to effective date"
+    validation: "trade_date <= effective_date"
+
+  - name: "reasonable_tenor"
+    description: "Swap tenor should be between 1 month and 30 years"
+    validation: "1 <= months_between(effective_date, maturity_date) <= 360"
+
+  - name: "reasonable_rate"
+    description: "Fixed rate should be reasonable (between -1% and 20%)"
+    validation: "-0.01 <= fixed_rate <= 0.20"
+
+# Match key configuration
+match_key:
+  fields:
+    - "counterparty"
+    - "trade_date"
+    - "effective_date"
+    - "maturity_date"
+    - "pay_receive"
+    - "notional"
+    - "currency"
+    - "fixed_rate"
+  description: "Composite key for matching IRS trades"
+
+# Normalization rules
+normalization:
+  currency:
+    type: "uppercase"
+    description: "Convert currency codes to uppercase"
+
+  day_count:
+    type: "mapping"
+    mappings:
+      "ACTUAL/360": "ACT/360"
+      "ACTUAL/365": "ACT/365"
+      "ACTUAL/ACTUAL": "ACT/ACT"
+      "30/360": "30/360"
+    description: "Normalize day count conventions"
+
+  floating_index:
+    type: "mapping"
+    mappings:
+      "USD-LIBOR-BBA": "USD-LIBOR-BBA"
+      "USD-SOFR-COMPOUND": "USD-SOFR"
+      "EUR-EURIBOR-Reuters": "EUR-EURIBOR"
+      "EUR-ESTR-COMPOUND": "EUR-ESTR"
+    description: "Normalize floating rate indices"
+
+# Error handling
+error_handling:
+  missing_required_field:
+    action: "reject"
+    message: "Required field {field_name} is missing at {xpath}"
+
+  invalid_field_value:
+    action: "reject"
+    message: "Invalid value '{value}' for field {field_name}: {validation_error}"
+
+  business_rule_violation:
+    action: "warn"
+    message: "Business rule violation: {rule_description}"
+
+# Output format
+output:
+  format: "canonical_trade"
+  include_metadata: true
+  include_source_reference: true

@@ -1,0 +1,33 @@
+# CME E-mini NASDAQ-100 Futures Configuration
+product:
+  symbol: "NQ"
+  exchange: "CME"
+  name: "E-mini NASDAQ-100 Futures"
+  product_type: "ETD"
+  tick_size: 0.25
+  tick_value: 5.00
+  contract_size: 20
+  currency: "USD"
+  asset_class: "Equity Index"
+
+# Reconciliation tolerance configuration
+tolerance:
+  quantity:
+    mode: "ABSOLUTE"
+    max: 0  # Zero quantity tolerance for futures
+  price:
+    mode: "TICKS"
+    max_ticks: 1  # Allow 1 tick difference (0.25 points)
+
+# Match keys for reconciliation
+match_keys:
+  - "trade_date"
+  - "account"
+  - "symbol"
+
+# Metrics and monitoring
+metrics:
+  enable_tick_monitoring: true
+  alert_thresholds:
+    price_breaks_per_hour: 10
+    quantity_breaks_per_hour: 5
