@@ -16,27 +16,29 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
 
 # Virtual environments
-venv/
+.env
+.venv
 env/
+venv/
 ENV/
 env.bak/
 venv.bak/
-.venv/
 
-# Environment variables
-.env
-.env.local
-.env.development
-.env.test
-.env.production
-.env.*.local
+# Database
+*.db
+*.sqlite3
+*.sqlite
+
+# Logs
+*.log
+logs/
+demo_logs/
 
 # IDE
 .vscode/
@@ -54,18 +56,15 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
-# Logs
-*.log
-logs/
-log/
+# Environment variables
+.env.local
+.env.production
+.env.staging
 
-# Database
-*.db
-*.sqlite3
-*.sqlite
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# Cache
-.cache/
+# pytest
 .pytest_cache/
 .coverage
 htmlcov/
@@ -77,88 +76,25 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Next.js
-.next/
-out/
+# Frontend build
+dist/
 build/
 
 # Docker
 .dockerignore
-docker-compose.override.yml
+
+# Security
+*.pem
+*.key
+!public.key
 
 # Temporary files
 *.tmp
 *.temp
-temp/
-tmp/
+.cache/
 
-# Credentials and secrets
-secrets/
-*.pem
-*.key
-*.crt
-*.p12
-
-# Data files (exclude sample data)
-data/
-*.csv
-*.xlsx
-*.xls
-*.pdf
-*.xml
-*.json
-
-# But include sample data templates
-!sample_data/
+# Large data files
+*.csv.gz
+*.parquet
 sample_data/*.csv
-sample_data/*.xlsx
-sample_data/*.pdf
-sample_data/*.xml
-
-# Documentation build
-docs/_build/
-site/
-
-# Jupyter Notebooks
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# Poetry
-poetry.lock
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
+!sample_data/example_*.csv
