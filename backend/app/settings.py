@@ -23,7 +23,7 @@ class SecuritySettings(BaseModel):
 
 
 class AppSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="", env_file=None, extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="", env_file=".env", extra="ignore")
 
     # Core
     environment: str = "development"

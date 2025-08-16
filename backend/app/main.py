@@ -40,7 +40,7 @@ from .audit.log_helper import auditlog
 from .run_utils import summarize_exceptions, count_auto_cleared
 
 
-TMP_DIR = Path(os.getenv("TMP_DIR", "/tmp/opspilot"))
+TMP_DIR = Path(os.getenv("TMP_DIR", "./tmp/opspilot"))
 TMP_DIR.mkdir(parents=True, exist_ok=True)
 
 AI_ENABLED = os.getenv("AI_ENABLED", "false").lower() == "true"

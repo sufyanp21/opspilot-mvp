@@ -13,8 +13,22 @@ from ..risk.span import diff_span_params
 
 def run_demo(base_dir: Path) -> Dict[str, Any]:
     # Load internal and CME positions as proxies for recon
-    internal = pd.read_csv(base_dir / "sample_data" / "internal_trades.csv")
-    cme = pd.read_csv(base_dir / "sample_data" / "cme_positions_20250812.csv")
+    sample_dir = base_dir / "sample_data"
+    
+    # Check if sample data exists
+    internal_path = sample_dir / "internal_trades.csv"
+    cme_path = sample_dir / "cme_positions_20250812.csv"
+    
+    if not internal_path.exists():
+        return {"error": f"Sample data not found at {internal_path}. Please ensure sample_data/ directory exists with required files."}
+    if not cme_path.exists():
+        return {"error": f"Sample data not found at {cme_path}. Please ensure sample_data/ directory exists with required files."}
+    
+    try:
+        internal = pd.read_csv(internal_path)
+        cme = pd.read_csv(cme_path)
+    except Exception as e:
+        return {"error": f"Failed to load sample data: {str(e)}"}
 
     # Map CME positions to trade-like rows for demo
     cme_df = pd.DataFrame(
@@ -37,9 +51,12 @@ def run_demo(base_dir: Path) -> Dict[str, Any]:
         }
     )
 
-    internal_trades = csv_ing.parse_trade_csv(internal_df)
-    external_trades = csv_ing.parse_trade_csv(cme_df)
-    recon = reconcile_trades(internal_trades, external_trades)
+    try:
+        internal_trades = csv_ing.parse_trade_csv(internal_df)
+        external_trades = csv_ing.parse_trade_csv(cme_df)
+        recon = reconcile_trades(internal_trades, external_trades)
+    except Exception as e:
+        return {"error": f"Reconciliation failed: {str(e)}"}
 
     # Risk changes (SPAN): read current and simulate yesterday
     span_today = {
