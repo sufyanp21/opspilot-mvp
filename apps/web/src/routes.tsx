@@ -7,6 +7,7 @@ import FileUpload from "./pages/FileUpload";
 import SpanAnalysis from "./pages/SpanAnalysis";
 import OtcProcessing from "./pages/OtcProcessing";
 import AuditTrail from "./pages/AuditTrail";
+import Demo from "./pages/Demo";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Outlet } from "react-router-dom";
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: "span", element: <SpanAnalysis /> },
       { path: "otc", element: <OtcProcessing /> },
       { path: "audit", element: <AuditTrail /> },
+      { path: "demo", element: <Demo /> },
     ],
   },
 ]);
