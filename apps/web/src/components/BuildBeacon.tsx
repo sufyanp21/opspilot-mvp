@@ -13,15 +13,18 @@ export function BuildBeacon() {
         position: "fixed",
         bottom: 8,
         right: 12,
-        fontSize: isProd ? 10 : 12,
-        opacity: isProd ? 0.45 : 0.9,
-        background: "rgba(0,0,0,0.04)",
-        color: "var(--muted-foreground, #555)",
-        padding: "2px 6px",
-        borderRadius: 6,
+        fontSize: isProd ? 11 : 13,
+        opacity: isProd ? 0.7 : 1,
+        background: isProd ? "rgba(59, 130, 246, 0.8)" : "rgba(16, 185, 129, 0.9)",
+        color: "white",
+        padding: "4px 8px",
+        borderRadius: 8,
         zIndex: 9999,
         pointerEvents: "none",
         userSelect: "none",
+        fontWeight: "500",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+        border: "1px solid rgba(255,255,255,0.2)",
       }}
       data-app-name={APP_NAME}
       data-git-sha={COMMIT_SHA}
@@ -29,7 +32,7 @@ export function BuildBeacon() {
       data-nonce={NONCE}
       aria-label="build-beacon"
     >
-      {APP_NAME} · {COMMIT_SHA.slice(0, 7)} · {BUILD_TIME} · {NONCE}
+      🚀 NEW UI · {APP_NAME} · {COMMIT_SHA.slice(0, 7)} · {NONCE}
     </footer>
   );
 }

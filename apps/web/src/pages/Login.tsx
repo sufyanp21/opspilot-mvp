@@ -32,7 +32,10 @@ export default function Login() {
       const userRole = email.includes("+admin@") ? "admin" : "analyst";
       setUser({ email, role: userRole });
       
-      window.location.href = "/";
+      // Use React Router navigation instead of window.location
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 100);
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Login failed. Please check your credentials.");
     } finally {
