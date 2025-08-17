@@ -17,27 +17,24 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       const token = localStorage.getItem("opspilot_access");
       
       if (!token) {
+        setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
 
       try {
-        // Try to validate token with a protected endpoint
-        const response = await client.get("/health"); // This endpoint doesn't require auth
-        
-        // If we have a token and the request succeeded, we're authenticated
-        if (response.status === 200) {
-          // If we don't have user info, extract from stored data
-          if (!user) {
-            const storedEmail = localStorage.getItem("user_email") || "user@example.com";
-            const userRole = storedEmail.includes("+admin@") ? "admin" : "analyst";
-            setUser({ email: storedEmail, role: userRole });
-          }
+        // Use the new /auth/me endpoint to validate the token and get user info
+        const { data } = await client.get("/auth/me");
+        if (data && data.email) {
+          setUser({ email: data.email, role: data.roles.includes("admin") ? "admin" : "analyst" });
           setIsAuthenticated(true);
+        } else {
+          // Token might be valid but something is wrong with the user data
+          throw new Error("Invalid user data");
         }
       } catch (error) {
-        console.log("Auth check failed:", error);
-        // Token is invalid, clear it
+        console.error("Authentication check failed:", error);
+        // Token is invalid or expired, clear it
         localStorage.removeItem("opspilot_access");
         localStorage.removeItem("opspilot_refresh");
         localStorage.removeItem("user_email");

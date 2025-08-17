@@ -32,10 +32,11 @@ export default function Login() {
       const userRole = email.includes("+admin@") ? "admin" : "analyst";
       setUser({ email, role: userRole });
       
-      // Use React Router navigation instead of window.location
+      // Use a state update and effect to navigate, which is more reliable with React's lifecycle
+      // For simplicity in this context, a direct navigation after a short delay works.
       setTimeout(() => {
         window.location.href = "/";
-      }, 100);
+      }, 50); // A shorter delay is often sufficient
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Login failed. Please check your credentials.");
     } finally {
