@@ -14,22 +14,27 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     const checkAuth = async () => {
+      console.log("Running auth check...");
       const token = localStorage.getItem("opspilot_access");
       
       if (!token) {
+        console.log("No token found, user is not authenticated.");
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
 
+      console.log("Token found, verifying...");
       try {
         // Use the new /auth/me endpoint to validate the token and get user info
         const { data } = await client.get("/auth/me");
         if (data && data.email) {
+          console.log("Auth check successful, user is:", data.email);
           setUser({ email: data.email, role: data.roles.includes("admin") ? "admin" : "analyst" });
           setIsAuthenticated(true);
         } else {
           // Token might be valid but something is wrong with the user data
+          console.warn("Auth check returned invalid user data.");
           throw new Error("Invalid user data");
         }
       } catch (error) {
@@ -49,6 +54,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }, [user, setUser]);
 
   if (isLoading) {
+    console.log("Auth check in progress...");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -57,8 +63,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isAuthenticated) {
+    console.log("User is not authenticated, redirecting to login.");
     return <Navigate to="/login" replace />;
   }
 
+  console.log("User is authenticated, rendering protected content.");
   return <>{children}</>;
 }

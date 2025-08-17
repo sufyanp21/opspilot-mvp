@@ -19,9 +19,11 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    console.log("Login attempt for:", email);
 
     try {
       const { data } = await client.post("/auth/login", { email, password });
+      console.log("Login successful, received tokens.");
       localStorage.setItem("opspilot_access", data.access_token);
       localStorage.setItem("user_email", email); // Store for ProtectedRoute
       if (data.refresh_token) {
@@ -34,11 +36,14 @@ export default function Login() {
       
       // Use a state update and effect to navigate, which is more reliable with React's lifecycle
       // For simplicity in this context, a direct navigation after a short delay works.
+      console.log("Redirecting to home page...");
       setTimeout(() => {
         window.location.href = "/";
       }, 50); // A shorter delay is often sufficient
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Login failed. Please check your credentials.");
+      const errorMessage = err?.response?.data?.detail || "Login failed. Please check your credentials.";
+      console.error("Login failed:", errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
