@@ -8,6 +8,7 @@ import { router } from "./routes";
 import { queryClient } from "./lib/query";
 import "./index.css";
 import BuildBeacon from "@/components/BuildBeacon";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { forceUnregisterServiceWorkers } from "@/lib/sw-unregister";
 
 if (import.meta.env.DEV) {
@@ -18,13 +19,15 @@ if (import.meta.env.DEV) {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <RouterProvider router={router} />
-        <BuildBeacon />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <RouterProvider router={router} />
+          <BuildBeacon />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );
 
