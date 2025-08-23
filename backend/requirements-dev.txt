@@ -1,13 +1,20 @@
 # Development and Testing Dependencies
-black==23.11.0
-flake8==6.1.0
-isort==5.12.0
-mypy==1.7.1
-pytest==8.2.2
-pytest-cov==4.1.0
-pytest-mock==3.12.0
-pytest-asyncio==0.21.1
-coverage==7.3.2
-bandit==1.7.5
-safety==2.3.5
-httpx==0.27.0
+# Compatible versions to avoid conflicts
+pytest>=8.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+pytest-asyncio>=0.21.0
+coverage>=7.0.0
+
+# Code Quality Tools
+black>=23.0.0
+flake8>=6.0.0
+isort>=5.12.0
+mypy>=1.5.0
+
+# Security Tools (relaxed to avoid packaging conflicts)
+bandit[toml]>=1.7.0
+safety>=2.0.0
+
+# Utilities
+packaging>=21.0
