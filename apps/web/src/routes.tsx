@@ -3,6 +3,8 @@ import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Exceptions from "./pages/Exceptions";
 import Reconciliation from "./pages/Reconciliation";
+import ReconSummary from "./pages/ReconSummary";
+import RunHistory from "./pages/RunHistory";
 import FileUpload from "./pages/FileUpload";
 import SpanAnalysis from "./pages/SpanAnalysis";
 import OtcProcessing from "./pages/OtcProcessing";
@@ -50,6 +52,8 @@ export const router = createBrowserRouter([
       { index: true, element: <Dashboard />, errorElement: <RouteErrorElement /> },
       { path: "exceptions", element: <Exceptions />, errorElement: <RouteErrorElement /> },
       { path: "reconciliation", element: <Reconciliation />, errorElement: <RouteErrorElement /> },
+      { path: "summary", element: <ReconSummary />, errorElement: <RouteErrorElement /> },
+      { path: "runs", element: <RunHistory />, errorElement: <RouteErrorElement /> },
       { path: "upload", element: <FileUpload />, errorElement: <RouteErrorElement /> },
       { path: "span", element: <SpanAnalysis />, errorElement: <RouteErrorElement /> },
       { path: "otc", element: <OtcProcessing />, errorElement: <RouteErrorElement /> },

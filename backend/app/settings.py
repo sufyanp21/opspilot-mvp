@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import os
 from datetime import timedelta
 from typing import List
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Get the directory of the current file
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+# Construct the path to the .env file
+_env_path = os.path.join(_current_dir, "..", ".env")
 
 
 class SecuritySettings(BaseModel):
@@ -23,7 +29,7 @@ class SecuritySettings(BaseModel):
 
 
 class AppSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="", env_file=_env_path, extra="ignore")
 
     # Core
     environment: str = "development"

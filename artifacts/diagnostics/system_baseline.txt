@@ -1,0 +1,8 @@
+Python: Python 3.11.9
+Node: v22.18.0
+npm: [WinError 2] The system cannot find the file specified
+Docker: Docker version 28.3.2, build 578ccf6
+Compose: Docker Compose version v2.39.1-desktop.1
+OS: Windows=True WSL=False
+Ports: {8000: False, 5173: False, 3000: True, 8080: True, 6379: True, 5432: True}
+Backend health: True (http://localhost:8000/health)

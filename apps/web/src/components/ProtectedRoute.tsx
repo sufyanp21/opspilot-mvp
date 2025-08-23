@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useApp } from "@/lib/store";
 import client from "@/lib/api";
@@ -11,12 +11,16 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, setUser } = useApp();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const didCheckRef = useRef(false);
 
   useEffect(() => {
+    if (didCheckRef.current) return; // ensure single execution
+    didCheckRef.current = true;
+
     const checkAuth = async () => {
       console.log("Running auth check...");
       const token = localStorage.getItem("opspilot_access");
-      
+
       if (!token) {
         console.log("No token found, user is not authenticated.");
         setIsAuthenticated(false);
@@ -24,7 +28,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         return;
       }
 
-      console.log("Token found, verifying...");
+      console.log("Token found, verifying via /auth/me ...");
       try {
         // Use the new /auth/me endpoint to validate the token and get user info
         const { data } = await client.get("/auth/me");
@@ -33,7 +37,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           setUser({ email: data.email, role: data.roles.includes("admin") ? "admin" : "analyst" });
           setIsAuthenticated(true);
         } else {
-          // Token might be valid but something is wrong with the user data
           console.warn("Auth check returned invalid user data.");
           throw new Error("Invalid user data");
         }
@@ -46,12 +49,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         setUser(null);
         setIsAuthenticated(false);
       }
-      
+
       setIsLoading(false);
     };
 
     checkAuth();
-  }, [user, setUser]);
+  }, [setUser]);
 
   if (isLoading) {
     console.log("Auth check in progress...");

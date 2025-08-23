@@ -4,48 +4,70 @@ import io
 import json
 import os
 import uuid
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import pandas as pd
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Query, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware import Middleware
-from fastapi.responses import JSONResponse, StreamingResponse
-from prometheus_client import CollectorRegistry, Counter, generate_latest, CONTENT_TYPE_LATEST
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+_logger = logging.getLogger(__name__)
 
-from .schemas_cdm import Trade
-from .ingestion import csv as csv_ing
-from .recon.engine import reconcile_trades
-from .reports.exceptions_csv import exceptions_to_csv
-from .audit.logger import AuditLogger
-from .risk.span import diff_span_params, summarize_span_changes
-from .ml.predict import load_training_data, train_model, predict_breaks
-from .margin.impact import compute_margin_impact
-from .margin.positions import compute_im_vm_from_positions
-from .reports.regulatory import validate_regulatory, build_reg_pack
-from .recon.cluster import cluster_exceptions
-from .recon.nway import reconcile_nway
-from .db import init_db, get_session_optional, AuditHeader
-from .observability import setup_tracing
-from .demo.orchestrator import run_demo
-from .settings import settings
-from .api_auth import router as auth_router
-from .api_breaks import router as breaks_router
-from .api_runs import router as runs_router
-from .security.auth import get_current_user, require_roles, User
-from .security.rate_limit import path_scoped_rate_limit
-from .audit.log_helper import auditlog
-from .run_utils import summarize_exceptions, count_auto_cleared
+try:
+    import pandas as pd
+    from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Query, Depends
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.middleware import Middleware
+    from fastapi.responses import JSONResponse, StreamingResponse
+    from prometheus_client import CollectorRegistry, Counter, generate_latest, CONTENT_TYPE_LATEST
 
+    from .schemas_cdm import Trade
+    from .ingestion import csv as csv_ing
+    from .recon.engine import reconcile_trades
+    from .reports.exceptions_csv import exceptions_to_csv
+    from .audit.logger import AuditLogger
+    from .risk.span import diff_span_params, summarize_span_changes
+    from .ml.predict import load_training_data, train_model, predict_breaks
+    from .margin.impact import compute_margin_impact
+    from .margin.positions import compute_im_vm_from_positions
+    from .reports.regulatory import validate_regulatory, build_reg_pack
+    from .recon.cluster import cluster_exceptions
+    from .recon.nway import reconcile_nway
+    from .db import init_db, get_session_optional, AuditHeader
+    from .observability import setup_tracing
+    from .demo.orchestrator import run_demo
+    from .settings import settings
+    from .api_auth import router as auth_router
+    from .api_breaks import router as breaks_router
+    from .api_runs import router as runs_router
+    from .api_demo import router as demo_router
+    from .api_ingestion import router as ingestion_router
+    from .api_exceptions import router as exceptions_router
+    from .api_audit import router as audit_router
+    from .api_ops import router as ops_router
+    from .api_ml import router as ml_router
+    from .api_anomalies import router as anomalies_router
+    from .api_benchmark import router as benchmark_router
+    from .api_demo import router as demo_router
+    from .security.auth import get_current_user, require_roles, User
+    from .security.rate_limit import path_scoped_rate_limit
+    from .audit.log_helper import auditlog
+    from .run_utils import summarize_exceptions, count_auto_cleared
+except ImportError as e:
+    _logger.critical(f"Failed to import a dependency: {e}")
+    raise
+
+_logger.info("Starting application setup...")
 
 TMP_DIR = Path(os.getenv("TMP_DIR", "./tmp/opspilot"))
+_logger.info(f"Temporary directory set to: {TMP_DIR}")
 TMP_DIR.mkdir(parents=True, exist_ok=True)
 
 AI_ENABLED = os.getenv("AI_ENABLED", "false").lower() == "true"
+_logger.info(f"AI_ENABLED is set to: {AI_ENABLED}")
 
 app = FastAPI(title="OpsPilot API", version="1.0.0")
+_logger.info("FastAPI app instance created.")
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,8 +77,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Rate limit auth and upload endpoints
-app.middleware("http")(path_scoped_rate_limit({"/auth", "/upload"}, settings.rate_limit_auth_per_minute))
+# Rate limit only sensitive endpoints (login/refresh/upload), not /auth/me
+app.middleware("http")(path_scoped_rate_limit({"/auth/login", "/auth/refresh", "/upload"}, settings.rate_limit_auth_per_minute))
 
 audit_logger = AuditLogger(base_dir=TMP_DIR / "audit")
 MODEL_CACHE = {"predict": None}
@@ -308,14 +330,21 @@ def metrics():
 
 @app.on_event("startup")
 def on_startup():
+    _logger.info("Running startup tasks...")
     try:
         init_db()
-    except Exception:
-        pass
+        _logger.info("Database initialized successfully.")
+    except Exception as e:
+        _logger.critical(f"Failed to initialize database: {e}")
+        # In a real app, you might want to exit here if the DB is critical
+    
     try:
         setup_tracing(app)
-    except Exception:
-        pass
+        _logger.info("Tracing set up successfully.")
+    except Exception as e:
+        _logger.warning(f"Failed to set up tracing: {e}")
+    
+    _logger.info("Startup tasks complete.")
     # No return value for startup hook
 
 
@@ -337,3 +366,12 @@ def exceptions_bulk_resolve(payload: Dict[str, Any], user: User = Depends(requir
 app.include_router(auth_router)
 app.include_router(breaks_router)
 app.include_router(runs_router)
+app.include_router(demo_router)
+app.include_router(ingestion_router)
+app.include_router(exceptions_router)
+app.include_router(audit_router)
+app.include_router(ops_router)
+app.include_router(ml_router)
+app.include_router(anomalies_router)
+app.include_router(benchmark_router)
+app.include_router(demo_router)

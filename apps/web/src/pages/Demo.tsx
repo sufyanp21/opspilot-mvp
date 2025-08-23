@@ -1,5 +1,5 @@
 import { useState } from "react";
-import client from "@/lib/api";
+import client, { postJson } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -20,6 +20,21 @@ export default function Demo() {
       setResult(data);
     } catch (err: any) {
       const errorMsg = err?.response?.data?.error || err?.response?.data?.detail || "Demo execution failed";
+      setError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function runAutoDemo() {
+    setIsLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const data = await postJson("/demo/auto", {});
+      setResult(data);
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.error || err?.response?.data?.detail || "Automated demo failed";
       setError(errorMsg);
     } finally {
       setIsLoading(false);
@@ -63,6 +78,24 @@ export default function Demo() {
                 <>
                   <TrendingUp className="h-5 w-5 mr-2" />
                   Run Demo
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={runAutoDemo}
+              disabled={isLoading}
+              size="lg"
+              className="ml-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg"
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Running...
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="h-5 w-5 mr-2" />
+                  Run Automated Demo
                 </>
               )}
             </Button>

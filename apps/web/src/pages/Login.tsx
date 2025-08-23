@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Activity, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("trader@example.com");
@@ -14,6 +15,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setUser } = useApp();
+  const navigate = useNavigate();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,17 +31,13 @@ export default function Login() {
       if (data.refresh_token) {
         localStorage.setItem("opspilot_refresh", data.refresh_token);
       }
-      
+
       // Extract user info from response or token
       const userRole = email.includes("+admin@") ? "admin" : "analyst";
       setUser({ email, role: userRole });
-      
-      // Use a state update and effect to navigate, which is more reliable with React's lifecycle
-      // For simplicity in this context, a direct navigation after a short delay works.
-      console.log("Redirecting to home page...");
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 50); // A shorter delay is often sufficient
+
+      console.log("Navigating to home page...");
+      navigate("/", { replace: true });
     } catch (err: any) {
       const errorMessage = err?.response?.data?.detail || "Login failed. Please check your credentials.";
       console.error("Login failed:", errorMessage);
