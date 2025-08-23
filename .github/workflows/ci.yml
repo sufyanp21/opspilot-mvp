@@ -57,7 +57,7 @@ jobs:
         pytest tests/ --cov=app --cov-report=xml -v --tb=short || true
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       if: matrix.python-version == '3.11'
       with:
         file: ./backend/coverage.xml
@@ -76,28 +76,31 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: apps/web/package-lock.json
+    
+    - name: Set up Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
     
     - name: Install dependencies
       run: |
         cd apps/web
-        npm ci
+        bun install
     
     - name: Run linting
       run: |
         cd apps/web
-        npm run lint || true
+        bun run lint || true
     
     - name: Run type checking
       run: |
         cd apps/web
-        npx tsc --noEmit || true
+        bunx tsc --noEmit || true
     
     - name: Build application
       run: |
         cd apps/web
-        npm run build
+        bun run build
 
   # Security Scan
   security:
@@ -125,7 +128,7 @@ jobs:
         bandit -r app/ -f json -o bandit-report.json || true
     
     - name: Upload security report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-report
         path: backend/bandit-report.json
@@ -157,14 +160,19 @@ jobs:
         pip install build
         python -m build || true
     
+    - name: Set up Bun for build
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+    
     - name: Build Frontend
       run: |
         cd apps/web
-        npm ci
-        npm run build
+        bun install
+        bun run build
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-artifacts
         path: |
