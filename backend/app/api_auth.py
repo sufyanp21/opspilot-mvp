@@ -12,6 +12,8 @@ from .security.auth import (
     create_access_token,
     create_refresh_token,
     verify_token,
+    get_current_user,
+    User,
 )
 
 
@@ -27,6 +29,11 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+
+
+class UserResponse(BaseModel):
+    email: str
+    roles: list[str]
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -45,6 +52,14 @@ def login(payload: LoginRequest, db=Depends(get_session_optional)) -> Any:
     if db is not None:
         auditlog(db, action="auth_success", actor_email=payload.email, details={"roles": roles})
     return TokenResponse(access_token=access, refresh_token=refresh)
+
+
+@router.get("/me", response_model=UserResponse)
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    """
+    Get current user from token.
+    """
+    return {"email": current_user.email, "roles": current_user.roles}
 
 
 class RefreshRequest(BaseModel):

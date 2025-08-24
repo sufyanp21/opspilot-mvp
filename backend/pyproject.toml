@@ -3,13 +3,13 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "opspilot"
+name = "derivaclear"
 version = "0.1.0"
 description = "AI-powered RegTech platform for derivatives post-trade automation"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "OpsPilot Team", email = "dev@opspilot.com"},
+    {name = "DerivaClear Team", email = "dev@derivaclear.com"},
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

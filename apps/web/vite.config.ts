@@ -19,4 +19,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    'import.meta.env.VITE_APP_NAME': JSON.stringify(process.env.VITE_APP_NAME || 'OpsPilot Vite'),
+    'import.meta.env.VITE_GIT_SHA': JSON.stringify(process.env.GIT_SHA || process.env.VITE_GIT_SHA || ''),
+    'import.meta.env.VITE_BUILD_TIME': JSON.stringify(new Date().toISOString()),
+  },
 }));

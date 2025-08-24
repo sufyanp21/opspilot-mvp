@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, String, DateTime, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker, Session
 
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./opspilot.db")
 
 
 class Base(DeclarativeBase):
@@ -29,6 +29,7 @@ SessionLocal = sessionmaker(bind=engine) if engine else None
 
 def init_db() -> None:
     if engine:
+        # Migration-safe in MVP: ensure tables exist
         Base.metadata.create_all(bind=engine)
 
 

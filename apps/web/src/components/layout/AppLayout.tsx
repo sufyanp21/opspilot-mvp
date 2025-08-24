@@ -26,7 +26,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarTrigger />
         <div className="flex-1 flex items-center gap-2">
           <div className="h-6 w-1.5 rounded-full bg-primary" />
-          <span className="font-semibold tracking-tight">OpsPilot MVP</span>
+          <span className="font-semibold tracking-tight">DerivaClear</span>
+          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">NEW UI</span>
         </div>
           <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
